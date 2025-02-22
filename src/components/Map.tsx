@@ -55,6 +55,7 @@ const options = {
   disableDefaultUI: false,
   zoomControl: true,
   mapTypeControl: true,
+  clickableIcons: false,
   streetViewControl: true,
   maxZoom: 22, // Maximum zoom level
   styles: [
@@ -211,17 +212,11 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
           position={{ lat: selectedFart.latitude, lng: selectedFart.longitude }}
           onCloseClick={() => setSelectedFart(null)}
         >
-          <div className="p-4 min-w-[200px]">
-            <div className="flex justify-between items-start mb-1">
-              <div>
-                {selectedFart.description && (
-                  <p className="text-lg font-medium text-gray-900 mb-2">{selectedFart.description}</p>
-                )}
-                <p className="text-sm font-medium text-gray-800 mb-1">By: {selectedFart.name || 'Anonymous'}</p>
-                <p className="text-sm text-gray-700">
-                  {new Date(selectedFart.timestamp).toLocaleString()}
-                </p>
-              </div>
+          <div className="p-1 min-w-[200px]">
+            <div className="flex justify-between items-start gap-2 mb-2">
+              {selectedFart.description && (
+                <p className="text-lg font-medium text-gray-900">{selectedFart.description}</p>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -230,11 +225,17 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
                     setSelectedFart(null);
                   }
                 }}
-                className="text-red-500 hover:text-red-700 transition-colors ml-4"
+                className="text-red-500 hover:text-red-700 transition-colors flex-shrink-0"
                 title="Delete fart"
               >
                 <TrashIcon className="w-5 h-5" />
               </button>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-800 mb-1">By: {selectedFart.name || 'Anonymous'}</p>
+              <p className="text-sm text-gray-700">
+                {new Date(selectedFart.timestamp).toLocaleString()}
+              </p>
             </div>
           </div>
         </InfoWindow>
