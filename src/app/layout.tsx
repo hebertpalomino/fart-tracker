@@ -15,11 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Fart Tracker',
   description: 'Track and map your farts around the world',
-  icons: [
-    { rel: 'icon', url: '/favicon.ico' },
-    { rel: 'icon', url: '/icon.png' },
-    { rel: 'apple-touch-icon', url: '/apple-icon.png' },
-  ],
+  icons: '/icon',
   manifest: '/manifest.json',
   themeColor: '#4f46e5',
   appleWebApp: {
