@@ -72,6 +72,16 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
   const [userLocation, setUserLocation] = useState<MapCenter & { accuracy?: number } | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
+  // Add map event listeners
+  useEffect(() => {
+    if (map) {
+      map.addListener('dragstart', () => {
+        setSelectedFart(null);
+        setInfoPosition(null);
+      });
+    }
+  }, [map]);
+
   const handleMyLocationClick = () => {
     if (userLocation && map) {
       map.panTo(userLocation);
@@ -144,6 +154,7 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
   }, []);
 
   const [selectedFart, setSelectedFart] = useState<(FartLocation & { isNew?: boolean }) | null>(null);
+  const [infoPosition, setInfoPosition] = useState<{ x: number, y: number } | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -197,48 +208,134 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
           key={fart.id}
           position={{ lat: fart.latitude, lng: fart.longitude }}
           icon={getFartIcon(google.maps)}
-          onClick={() => setSelectedFart(fart)}
+          onClick={(e) => {
+            if (!map || !e.domEvent) return;
+            
+            // Clear any existing overlay first
+            setSelectedFart(null);
+            setInfoPosition(null);
+            
+            const markerPosition = { lat: fart.latitude, lng: fart.longitude };
+            
+            // Pan to the marker
+            map.panTo(markerPosition);
+            
+            // Wait for pan animation to complete
+            google.maps.event.addListenerOnce(map, 'idle', () => {
+              // Get screen coordinates of the marker
+              const overlay = new google.maps.OverlayView();
+              overlay.setMap(map);
+              overlay.draw = () => {};
+              
+              const projection = overlay.getProjection();
+              const point = projection?.fromLatLngToContainerPixel(
+                new google.maps.LatLng(markerPosition)
+              );
+              
+              if (point) {
+                setInfoPosition({ x: point.x, y: point.y });
+                setSelectedFart(fart);
+              }
+            });
+          }}
         />
       ))}
       {newFart && (
         <Marker
           position={{ lat: newFart.latitude, lng: newFart.longitude }}
           icon={getFartIcon(google.maps)}
-          onClick={() => setSelectedFart({ ...newFart, isNew: true })}
+          onClick={(e) => {
+            if (!map || !e.domEvent) return;
+            
+            // Clear any existing overlay first
+            setSelectedFart(null);
+            setInfoPosition(null);
+            
+            const markerPosition = { lat: newFart.latitude, lng: newFart.longitude };
+            
+            // Pan to the marker
+            map.panTo(markerPosition);
+            
+            // Wait for pan animation to complete
+            google.maps.event.addListenerOnce(map, 'idle', () => {
+              // Get screen coordinates of the marker
+              const overlay = new google.maps.OverlayView();
+              overlay.setMap(map);
+              overlay.draw = () => {};
+              
+              const projection = overlay.getProjection();
+              const point = projection?.fromLatLngToContainerPixel(
+                new google.maps.LatLng(markerPosition)
+              );
+              
+              if (point) {
+                setInfoPosition({ x: point.x, y: point.y });
+                setSelectedFart({ ...newFart, isNew: true });
+              }
+            });
+          }}
         />
       )}
-      {selectedFart && (
-        <InfoWindow
-          position={{ lat: selectedFart.latitude, lng: selectedFart.longitude }}
-          onCloseClick={() => setSelectedFart(null)}
+      {selectedFart && infoPosition && (
+        <div 
+          className="absolute z-50"
+          style={{
+            left: `${infoPosition.x}px`,
+            top: `${infoPosition.y}px`,
+            transform: 'translate(-50%, -120%)',
+          }}
         >
-          <div className="p-1 min-w-[200px]">
-            <div className="flex justify-between items-start gap-2 mb-2">
-              {selectedFart.description && (
-                <p className="text-lg font-medium text-gray-900">{selectedFart.description}</p>
-              )}
+          <div className="bg-white rounded-lg shadow-xl p-4 relative min-w-[300px]">
+            {/* Triangle pointer */}
+            <div 
+              className="absolute left-1/2 -bottom-2 w-4 h-4 bg-white transform -translate-x-1/2 rotate-45"
+              style={{ boxShadow: '4px 4px 8px rgba(0, 0, 0, 0.1)' }}
+            />
+            
+            <div className="flex justify-between items-start gap-4 mb-3">
+              <div className="flex-grow">
+                {selectedFart.description && (
+                  <p className="text-lg font-medium text-gray-900 break-words leading-snug">
+                    {selectedFart.description}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   if (typeof selectedFart.id === 'number') {
                     onDelete(selectedFart.id);
                     setSelectedFart(null);
+                    setInfoPosition(null);
                   }
                 }}
-                className="text-red-500 hover:text-red-700 transition-colors flex-shrink-0"
+                className="text-red-500 hover:text-red-700 transition-colors p-1 hover:bg-red-50 rounded"
                 title="Delete fart"
               >
                 <TrashIcon className="w-5 h-5" />
               </button>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-800 mb-1">By: {selectedFart.name || 'Anonymous'}</p>
-              <p className="text-sm text-gray-700">
+            
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-gray-800">
+                By: {selectedFart.name || 'Anonymous'}
+              </p>
+              <p className="text-sm text-gray-600">
                 {new Date(selectedFart.timestamp).toLocaleString()}
               </p>
             </div>
+
+            <button
+              onClick={() => {
+                setSelectedFart(null);
+                setInfoPosition(null);
+              }}
+              className="absolute -top-2 -right-2 bg-gray-800 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm hover:bg-gray-700 transition-colors"
+            >
+              ×
+            </button>
           </div>
-        </InfoWindow>
+        </div>
       )}
       {userLocation && (
         <>
