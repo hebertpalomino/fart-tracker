@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import type { FartLocation } from '@/types';
@@ -71,6 +71,18 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
   const [center, setCenter] = useState<MapCenter>(defaultCenter);
   const [userLocation, setUserLocation] = useState<MapCenter & { accuracy?: number } | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const overlayRef = useRef<google.maps.OverlayView | null>(null);
+
+  // Setup overlay for positioning
+  useEffect(() => {
+    if (map && !overlayRef.current) {
+      const overlay = new google.maps.OverlayView();
+      overlay.setMap(map);
+      overlay.onAdd = () => {};
+      overlay.draw = () => {};
+      overlayRef.current = overlay;
+    }
+  }, [map]);
 
   // Add map event listeners
   useEffect(() => {
@@ -209,25 +221,18 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
           position={{ lat: fart.latitude, lng: fart.longitude }}
           icon={getFartIcon(google.maps)}
           onClick={(e) => {
-            if (!map || !e.domEvent) return;
+            if (!map || !e.domEvent || !overlayRef.current) return;
             
             // Clear any existing overlay first
             setSelectedFart(null);
             setInfoPosition(null);
             
             const markerPosition = { lat: fart.latitude, lng: fart.longitude };
-            
-            // Pan to the marker
             map.panTo(markerPosition);
             
             // Wait for pan animation to complete
             google.maps.event.addListenerOnce(map, 'idle', () => {
-              // Get screen coordinates of the marker
-              const overlay = new google.maps.OverlayView();
-              overlay.setMap(map);
-              overlay.draw = () => {};
-              
-              const projection = overlay.getProjection();
+              const projection = overlayRef.current?.getProjection();
               const point = projection?.fromLatLngToContainerPixel(
                 new google.maps.LatLng(markerPosition)
               );
@@ -245,25 +250,18 @@ export default function Map({ onMapClick, onDelete, fartLocations, newFart }: Ma
           position={{ lat: newFart.latitude, lng: newFart.longitude }}
           icon={getFartIcon(google.maps)}
           onClick={(e) => {
-            if (!map || !e.domEvent) return;
+            if (!map || !e.domEvent || !overlayRef.current) return;
             
             // Clear any existing overlay first
             setSelectedFart(null);
             setInfoPosition(null);
             
             const markerPosition = { lat: newFart.latitude, lng: newFart.longitude };
-            
-            // Pan to the marker
             map.panTo(markerPosition);
             
             // Wait for pan animation to complete
             google.maps.event.addListenerOnce(map, 'idle', () => {
-              // Get screen coordinates of the marker
-              const overlay = new google.maps.OverlayView();
-              overlay.setMap(map);
-              overlay.draw = () => {};
-              
-              const projection = overlay.getProjection();
+              const projection = overlayRef.current?.getProjection();
               const point = projection?.fromLatLngToContainerPixel(
                 new google.maps.LatLng(markerPosition)
               );
