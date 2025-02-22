@@ -72,6 +72,24 @@ export default function Home() {
     }
   }
 
+  async function handleDelete(id: number) {
+    if (!confirm('Are you sure you want to delete this fart?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('fart_locations')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      await fetchFartLocations();
+    } catch (error) {
+      console.error('Error deleting location:', error);
+      alert('Failed to delete location. Please try again.');
+    }
+  }
+
 
 
 
@@ -79,11 +97,11 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">
-            🌍 Global Fart Tracker
+          <h1 className="text-5xl font-bold text-blue-500 bg-clip-text mb-4">
+            🌎 Global Fart Tracker
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            Track and discover flatulent activities around the world! 💨
+            Track and discover fart friends around the world! 💨
           </p>
         </div>
         
@@ -91,6 +109,7 @@ export default function Home() {
           <div className="h-[75vh] w-full relative">
             <Map 
               onMapClick={handleMapClick}
+              onDelete={handleDelete}
               fartLocations={fartLocations}
               newFart={newFart}
             />

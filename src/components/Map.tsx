@@ -8,10 +8,12 @@ declare global {
 
 import { useEffect, useState } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Circle } from '@react-google-maps/api';
+import { TrashIcon } from '@heroicons/react/24/outline';
 import type { FartLocation } from '@/types';
 
 interface MapProps {
   onMapClick: (lat: number, lng: number) => void;
+  onDelete: (id: number) => void;
   fartLocations: FartLocation[];
   newFart: FartLocation | null;
 }
@@ -64,7 +66,7 @@ const options = {
   ]
 };
 
-export default function Map({ onMapClick, fartLocations, newFart }: MapProps) {
+export default function Map({ onMapClick, onDelete, fartLocations, newFart }: MapProps) {
   const [center, setCenter] = useState<MapCenter>(defaultCenter);
   const [userLocation, setUserLocation] = useState<MapCenter & { accuracy?: number } | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -210,13 +212,30 @@ export default function Map({ onMapClick, fartLocations, newFart }: MapProps) {
           onCloseClick={() => setSelectedFart(null)}
         >
           <div className="p-4 min-w-[200px]">
-            {selectedFart.description && (
-              <p className="text-lg font-medium text-gray-900 mb-2">{selectedFart.description}</p>
-            )}
-            <p className="text-sm font-medium text-gray-800 mb-1">By: {selectedFart.name || 'Anonymous'}</p>
-            <p className="text-sm text-gray-700">
-              {new Date(selectedFart.timestamp).toLocaleString()}
-            </p>
+            <div className="flex justify-between items-start mb-1">
+              <div>
+                {selectedFart.description && (
+                  <p className="text-lg font-medium text-gray-900 mb-2">{selectedFart.description}</p>
+                )}
+                <p className="text-sm font-medium text-gray-800 mb-1">By: {selectedFart.name || 'Anonymous'}</p>
+                <p className="text-sm text-gray-700">
+                  {new Date(selectedFart.timestamp).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (typeof selectedFart.id === 'number') {
+                    onDelete(selectedFart.id);
+                    setSelectedFart(null);
+                  }
+                }}
+                className="text-red-500 hover:text-red-700 transition-colors ml-4"
+                title="Delete fart"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </InfoWindow>
       )}
