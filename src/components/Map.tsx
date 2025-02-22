@@ -14,7 +14,6 @@ interface MapProps {
   onMapClick: (lat: number, lng: number) => void;
   fartLocations: FartLocation[];
   newFart: FartLocation | null;
-  onSaveFart: () => void;
 }
 
 const pulsingDot = `
@@ -66,7 +65,7 @@ const options = {
   ]
 };
 
-export default function Map({ onMapClick, fartLocations, newFart, onSaveFart }: MapProps) {
+export default function Map({ onMapClick, fartLocations, newFart }: MapProps) {
   const [center, setCenter] = useState<MapCenter>(defaultCenter);
   const [userLocation, setUserLocation] = useState<MapCenter & { accuracy?: number } | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -142,16 +141,21 @@ export default function Map({ onMapClick, fartLocations, newFart, onSaveFart }: 
     };
   }, []);
 
-  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-    console.error('Google Maps API key is missing');
-    return <div>Error: Google Maps API key is not configured</div>;
-  }
   const [selectedFart, setSelectedFart] = useState<(FartLocation & { isNew?: boolean }) | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
   });
+
+  if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    console.error('Google Maps API key is missing');
+    return <div>Error: Google Maps API key is not configured</div>;
+  }
+
+  if (!isLoaded) {
+    return <div>Loading map...</div>;
+  }
 
   const handleMapClick = (e: google.maps.MapMouseEvent) => {
     if (!e.latLng) return;

@@ -10,7 +10,7 @@ const Map = dynamic(() => import('@/components/Map'), { ssr: false });
 
 export default function Home() {
   const [fartLocations, setFartLocations] = useState<FartLocation[]>([]);
-  const [newFart, setNewFart] = useState<FartLocation | null>(null);
+  const [newFart] = useState<FartLocation | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -72,29 +72,8 @@ export default function Home() {
     }
   }
 
-  async function saveFartLocation() {
-    console.log("new fart:");
-    if (!newFart) return;
 
-    try {
-      const { error } = await supabase
-        .from('fart_locations')
-        .insert({
-          latitude: newFart.latitude,
-          longitude: newFart.longitude,
-          description: newFart.description || 'Anonymous Fart',
-          timestamp: new Date().toISOString()
-        });
 
-      if (error) throw error;
-      
-      await fetchFartLocations();
-      setNewFart(null);
-    } catch (error) {
-      console.error('Error saving fart location:', error);
-      alert('Failed to save fart location. Please try again.');
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800">
@@ -114,7 +93,6 @@ export default function Home() {
               onMapClick={handleMapClick}
               fartLocations={fartLocations}
               newFart={newFart}
-              onSaveFart={saveFartLocation}
             />
             {showForm && (
               <FartForm
