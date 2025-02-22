@@ -54,7 +54,6 @@ const options = {
   zoomControl: true,
   mapTypeControl: true,
   streetViewControl: true,
-  minZoom: 15, // Restrict minimum zoom
   maxZoom: 22, // Maximum zoom level
   styles: [
     {
@@ -182,7 +181,7 @@ export default function Map({ onMapClick, fartLocations, newFart }: MapProps) {
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={center}
-        zoom={18} // High zoom level for detailed view
+        zoom={18} // Start with a world view
         onClick={handleMapClick}
         options={options}
         onLoad={(map) => {
