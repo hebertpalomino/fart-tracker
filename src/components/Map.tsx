@@ -7,7 +7,7 @@ declare global {
 }
 
 import { useEffect, useState } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Circle } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import type { FartLocation } from '@/types';
 
